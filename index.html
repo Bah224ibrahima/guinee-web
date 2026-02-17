@@ -1,0 +1,113 @@
+# Create a ready-to-publish folder structure and zip it
+
+import os
+from zipfile import ZipFile
+
+base_dir = "/mnt/data/Guinee_Web_Ready_Project"
+os.makedirs(base_dir, exist_ok=True)
+
+# Create folders
+folders = [
+"app_flutter/lib",
+"app_flutter/assets/logo",
+"app_flutter/assets/screenshots",
+"backend_firebase_rules",
+"branding",
+"play_store_materials",
+"docs"
+]
+
+for f in folders:
+os.makedirs(os.path.join(base_dir, f), exist_ok=True)
+
+# Copy generated logo if exists
+logo_src = "/mnt/data/An_infographic_for_the_\"Guinée_Web\"_social_media_a.png"
+logo_dst = os.path.join(base_dir, "branding", "guinee_web_logo.png")
+if os.path.exists(logo_src):
+import shutil
+shutil.copy(logo_src, logo_dst)
+
+# Create Flutter main.dart
+main_dart = """import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+void main() async {
+WidgetsFlutterBinding.ensureInitialized();
+await Firebase.initializeApp();
+runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+const MyApp({super.key});
+
+@override
+Widget build(BuildContext context) {
+return MaterialApp(
+debugShowCheckedModeBanner: false,
+title: 'Guinée Web',
+theme: ThemeData(primarySwatch: Colors.green),
+home: const HomePage(),
+);
+}
+}
+
+class HomePage extends StatelessWidget {
+const HomePage({super.key});
+
+@override
+Widget build(BuildContext context) {
+return Scaffold(
+appBar: AppBar(title: const Text('Guinée Web 🇬🇳')),
+body: const Center(
+child: Text('Bienvenue sur Guinée Web'),
+),
+);
+}
+}
+"""
+with open(os.path.join(base_dir, "app_flutter/lib/main.dart"), "w", encoding="utf-8") as f:
+f.write(main_dart)
+
+# Firebase rules sample
+rules = """rules_version = '2';
+service cloud.firestore {
+match /databases/{database}/documents {
+match /posts/{postId} {
+allow read, write: if request.auth != null;
+}
+}
+}"""
+with open(os.path.join(base_dir, "backend_firebase_rules/firestore.rules"), "w") as f:
+f.write(rules)
+
+# README
+readme = """# Guinée Web — Projet prêt à publier
+
+## Contenu
+- app_flutter/ → Code Flutter prêt
+- branding/ → Logo officiel
+- backend_firebase_rules/ → Règles sécurité Firebase
+- play_store_materials/ → À ajouter captures écran
+- docs/ → Guides
+
+## Étapes pour publier
+1. Installer Flutter
+2. Ajouter Firebase
+3. flutter build apk --release
+4. Publier sur Play Store
+
+Bonne chance 🚀
+"""
+with open(os.path.join(base_dir, "README.txt"), "w", encoding="utf-8") as f:
+f.write(readme)
+
+# Zip it
+zip_path = "/mnt/data/Guinee_Web_Pack_Complet.zip"
+with ZipFile(zip_path, 'w') as zipf:
+for root, dirs, files in os.walk(base_dir):
+for file in files:
+full_path = os.path.join(root, file)
+rel_path = os.path.relpath(full_path, base_dir)
+zipf.write(full_path, rel_path)
+
+zip_path
